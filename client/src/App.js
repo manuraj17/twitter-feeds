@@ -21,8 +21,8 @@ class App extends Component {
  
   updateTweet(data) {
    let tweets = this.state.tweets;
-   if (tweets.length > 25) { 
-     console.log("Size exceeded, popping");
+   if (tweets.length == 25) { 
+     console.log("List limit, popping");
      tweets.shift(); 
    }
    tweets.push(data);
