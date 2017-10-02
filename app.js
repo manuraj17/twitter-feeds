@@ -4,6 +4,8 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var socketIO = require('socket.io')(); //({ path: '/socket.io' });
+const Twitter = require('twitter');
 
 var index = require('./routes/index');
 var users = require('./routes/users');
@@ -50,5 +52,44 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+// socket.io settings
+app.socketIO = socketIO;
+
+const chat = socketIO.on('connection', function(socket){
+  console.log('Socket connected');
+  socket.on('my other event', function(data){
+    console.log(data);
+  });
+});
+
+const client = new Twitter({
+  consumer_key: process.env.TWITTER_CONSUMER_KEY,
+  consumer_secret: process.env.TWITTER_CONSUMER_SECRET,
+  access_token_key: process.env.TWITTER_ACCESS_TOKEN_KEY,
+  access_token_secret: process.env.TWITTER_ACCESS_TOKEN_SECRET
+});
+
+let stream = null;
+
+if(process.env.STREAM_STATUS == 'true') {
+  console.log("Streaming enabled");
+  stream = client.stream('statuses/filter', {track: 'javascript'});
+
+  stream.on('data', function(event) {
+    console.log(event && event.text);
+    chat.emit('news', { 
+      'id' : event.id,
+      'user': event.user.screen_name, 
+      'image': event.user.profile_image_url,
+      'text': event.text }
+    );
+  });
+  
+  stream.on('error', function(error) {
+    console.log(error);
+    throw error;
+  });
+} else { console.log("Streaming disabled"); }
 
 module.exports = app;
