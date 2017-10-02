@@ -77,7 +77,6 @@ if(process.env.STREAM_STATUS == 'true') {
   stream = client.stream('statuses/filter', {track: 'javascript'});
 
   stream.on('data', function(event) {
-    console.log(event && event.text);
     chat.emit('news', { 
       'id' : event.id,
       'user': event.user.screen_name, 
